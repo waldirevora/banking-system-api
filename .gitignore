@@ -22,3 +22,6 @@ Thumbs.db
 # Coverage
 .Coverage
 htmlcov/
+
+# Banco SQLite gerado localmente
+database/banking.db
