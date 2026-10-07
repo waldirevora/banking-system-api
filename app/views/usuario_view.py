@@ -21,3 +21,29 @@ def criar_usuario(tipo):
     dados = request.get_json(silent=True) or {}
     resposta, status = UsuarioController.criar_usuario(tipo, dados)
     return jsonify(resposta), status
+
+@usuario_bp.post("/usuarios/<tipo>/<int:usuario_id>/saque")
+def realizar_saque(tipo, usuario_id):
+    """Realiza um saque para o usuário."""
+
+    dados = request.get_json(silent=True) or {}
+
+    resposta, status = UsuarioController.realizar_saque(
+        tipo,
+        usuario_id,
+        dados.get("valor"),
+    )
+
+    return jsonify(resposta), status
+
+
+@usuario_bp.get("/usuarios/<tipo>/<int:usuario_id>/extrato")
+def realizar_extrato(tipo, usuario_id):
+    """Retorna o extrato do usuário."""
+
+    resposta, status = UsuarioController.realizar_extrato(
+        tipo,
+        usuario_id,
+    )
+
+    return jsonify(resposta), status

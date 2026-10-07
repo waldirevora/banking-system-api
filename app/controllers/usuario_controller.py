@@ -1,4 +1,6 @@
 from app.models.usuario_model import UsuarioModel
+from app.models.pessoa_fisica import PessoaFisica
+from app.models.pessoa_juridica import PessoaJuridica
 
 
 class UsuarioController:
@@ -50,3 +52,64 @@ class UsuarioController:
         usuario_id = UsuarioModel.criar(tipo, dados)
 
         return {"id": usuario_id}, 201
+    
+    @staticmethod
+    def realizar_saque(tipo, usuario_id, valor):
+        """Realiza um saque para o usuário informado."""
+
+        if not isinstance(valor, (int, float)):
+            return {"erro": "Valor de saque inválido."}, 400
+
+        try:
+            usuario = UsuarioModel.buscar_por_id(tipo, usuario_id)
+        except ValueError as error:
+            return {"erro": str(error)}, 400
+
+        if usuario is None:
+            return {"erro": "Usuário não encontrado."}, 404
+
+        if tipo == "fisica":
+            cliente = PessoaFisica(
+                usuario["nome_completo"],
+                usuario["saldo"],
+            )
+        else:
+            cliente = PessoaJuridica(
+                usuario["nome_fantasia"],
+                usuario["saldo"],
+            )
+
+        if not cliente.sacar_dinheiro(valor):
+            return {"erro": "Saque não permitido."}, 400
+
+        UsuarioModel.atualizar_saldo(tipo, usuario_id, cliente.saldo)
+
+        return {
+            "mensagem": "Saque realizado com sucesso.",
+            "saldo": cliente.saldo,
+        }, 200
+
+    @staticmethod
+    def realizar_extrato(tipo, usuario_id):
+        """Retorna o extrato do usuário informado."""
+
+        try:
+            usuario = UsuarioModel.buscar_por_id(tipo, usuario_id)
+        except ValueError as error:
+            return {"erro": str(error)}, 400
+
+        if usuario is None:
+            return {"erro": "Usuário não encontrado."}, 404
+
+        if tipo == "fisica":
+            cliente = PessoaFisica(
+                usuario["nome_completo"],
+                usuario["saldo"],
+            )
+        else:
+            cliente = PessoaJuridica(
+                usuario["nome_fantasia"],
+                usuario["saldo"],
+            )
+
+        return cliente.realizar_extrato(), 200

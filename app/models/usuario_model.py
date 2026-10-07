@@ -83,3 +83,36 @@ class UsuarioModel:
             connection.commit()
 
         return cursor.lastrowid
+
+    @classmethod
+    def buscar_por_id(cls, tipo, usuario_id):
+        """Busca um usuário pelo identificador."""
+
+        tabela = TABELAS.get(tipo)
+
+        if tabela is None:
+            raise ValueError("Tipo de usuário inválido.")
+
+        with cls._conectar() as connection:
+            registro = connection.execute(
+                f"SELECT * FROM {tabela} WHERE id = ?",
+                (usuario_id,),
+            ).fetchone()
+
+        return dict(registro) if registro else None
+
+    @classmethod
+    def atualizar_saldo(cls, tipo, usuario_id, saldo):
+        """Atualiza o saldo de um usuário."""
+
+        tabela = TABELAS.get(tipo)
+
+        if tabela is None:
+            raise ValueError("Tipo de usuário inválido.")
+
+        with cls._conectar() as connection:
+            connection.execute(
+                f"UPDATE {tabela} SET saldo = ? WHERE id = ?",
+                (saldo, usuario_id),
+            )
+            connection.commit()

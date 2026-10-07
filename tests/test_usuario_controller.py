@@ -64,3 +64,73 @@ def test_criar_usuario_com_dados_incompletos():
 
     assert status == 400
     assert resposta["erro"] == "Dados obrigatórios não informados."
+
+def test_saque_pessoa_fisica_acima_do_limite():
+    """Valida o limite de saque da Pessoa Física."""
+
+    usuario = {
+        "nome_completo": "Teste PF",
+        "saldo": 5000,
+    }
+
+    with patch(
+        "app.controllers.usuario_controller.UsuarioModel.buscar_por_id",
+        return_value=usuario,
+    ):
+        resposta, status = UsuarioController.realizar_saque(
+            "fisica",
+            1,
+            1500,
+        )
+
+    assert status == 400
+    assert resposta["erro"] == "Saque não permitido."
+
+
+def test_saque_pessoa_juridica():
+    """Valida saque permitido para Pessoa Jurídica."""
+
+    usuario = {
+        "nome_fantasia": "Teste PJ",
+        "saldo": 5000,
+    }
+
+    with patch(
+        "app.controllers.usuario_controller.UsuarioModel.buscar_por_id",
+        return_value=usuario,
+    ), patch(
+        "app.controllers.usuario_controller.UsuarioModel.atualizar_saldo"
+    ) as atualizar_saldo:
+        resposta, status = UsuarioController.realizar_saque(
+            "juridica",
+            1,
+            1500,
+        )
+
+    assert status == 200
+    assert resposta["saldo"] == 3500
+    atualizar_saldo.assert_called_once_with("juridica", 1, 3500)
+
+
+def test_realizar_extrato():
+    """Valida o extrato de uma Pessoa Física."""
+
+    usuario = {
+        "nome_completo": "Teste PF",
+        "saldo": 2500,
+    }
+
+    with patch(
+        "app.controllers.usuario_controller.UsuarioModel.buscar_por_id",
+        return_value=usuario,
+    ):
+        resposta, status = UsuarioController.realizar_extrato(
+            "fisica",
+            1,
+        )
+
+    assert status == 200
+    assert resposta == {
+        "nome": "Teste PF",
+        "saldo": 2500,
+    }
